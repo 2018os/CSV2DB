@@ -1,0 +1,25 @@
+{
+  "name": "prsima-csv",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "insert_genre": "node index.js genre",
+    "insert_author": "node index.js author",
+    "insert_webtoon": "node index.js webtoon",
+    "migrate": "npx prisma migrate save --create-db --experimental",
+    "db": "npx prisma migrate up --create-db --experimental",
+    "generate": "npx prisma generate",
+    "introspect": "npx prisma introspect"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@prisma/client": "^2.2.0",
+    "csv-parser": "^2.3.3"
+  },
+  "devDependencies": {
+    "@prisma/cli": "^2.2.0"
+  }
+}

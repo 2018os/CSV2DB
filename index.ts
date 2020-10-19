@@ -95,7 +95,7 @@ async function main() {
     case "author":
       return executeInsertData(insertAuthors, "csv/author.csv");
     case "webtoon":
-      return executeInsertData(insertWebtoons, "csv/webtoon.csv");
+      return executeInsertData(insertWebtoons, "csv/webtoons.csv");
     default:
       return 0;
   }

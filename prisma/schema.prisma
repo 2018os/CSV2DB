@@ -1,6 +1,6 @@
 datasource db {
   provider = "mysql"
-  url      = env("PRODUCT_DATABASE_URL")
+  url      = env("LOCAL_DATABASE_URL")
 }
 
 generator client {
@@ -27,6 +27,7 @@ model Webtoon {
   authors     Author[]     @relation(references: [id])
   genres      Genre[]      @relation(references: [code])
   collections Collection[] @relation(references: [id])
+  comments    Comment[]
 }
 
 model Author {
@@ -46,6 +47,33 @@ model Collection {
   title       String    @unique
   description String
   webtoons    Webtoon[] @relation(references: [id])
+  writer      User      @relation(fields: [writerId], references: [id])
+  writerId    String
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
+  comments    Comment[]
+}
+
+model User {
+  id          String       @id
+  name        String
+  email       String       @unique
+  password    String
+  collections Collection[]
+  commnets    Comment[]
+}
+
+model Comment {
+  id           String      @id
+  message      String
+  subComments  Comment[]
+  createdAt    DateTime    @default(now())
+  webtoon      Webtoon?    @relation(fields: [webtoonId], references: [id])
+  webtoonId    String?
+  writer       User?       @relation(fields: [writerId], references: [id])
+  writerId     String?
+  comment      Comment?    @relation("CommentToComment", fields: [commentId], references: [id])
+  commentId    String?
+  collection   Collection? @relation(fields: [collectionId], references: [id])
+  collectionId String?
 }

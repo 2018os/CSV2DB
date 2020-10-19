@@ -1,32 +1,40 @@
-const { PrismaClient } = require("@prisma/client");
+import { PrismaClient } from "@prisma/client";
 
-const { sleep, stringToBoolean, getData } = require("./tools");
+import {
+  sleep,
+  stringToBoolean,
+  getData,
+  Genre,
+  Author,
+  Webtoon,
+  CsvData,
+} from "./tools";
 
 const prisma = new PrismaClient();
 
 const AUTHOR_ID_UNIT = 1000;
 const WEBTOON_ID_UNIT = 10000;
 
-async function insertGenres(genre) {
+async function insertGenres(value: Genre) {
   return prisma.genre.create({
     data: {
-      name: genre.name,
-      code: genre.code,
+      name: value.name,
+      code: value.code,
     },
   });
 }
 
-async function insertAuthors(author) {
-  const authorIdaddedUnit = Number(author.id) + AUTHOR_ID_UNIT;
+async function insertAuthors(value: Author) {
+  const authorIdaddedUnit = Number(value.id) + AUTHOR_ID_UNIT;
   return prisma.author.create({
     data: {
       id: Buffer.from(String(authorIdaddedUnit)).toString("base64"),
-      name: author.name,
+      name: value.name,
     },
   });
 }
 
-async function insertWebtoons(webtoon) {
+async function insertWebtoons(value: Webtoon) {
   const {
     id, // base64 encoding
     title,
@@ -35,12 +43,13 @@ async function insertWebtoons(webtoon) {
     isFinish,
     isAdult,
     isFree,
+    // TODO: Enhance
     platform,
     url,
     thumbnail,
     description,
     authors_id,
-  } = webtoon;
+  } = value;
   const genreArray = genre_codes.split("/");
   const genreObj = genreArray.map((genre) => ({ code: genre }));
   const authorArray = authors_id.split("/");
@@ -71,8 +80,8 @@ async function insertWebtoons(webtoon) {
   });
 }
 
-async function executeInsertData(action, path) {
-  const data = await getData(path);
+async function executeInsertData(action: Function, path: string) {
+  const data: CsvData = await getData(path);
   for (let i = 0; i < data.length; i++) {
     sleep(2000);
     await action(data[i]);

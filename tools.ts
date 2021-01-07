@@ -1,33 +1,7 @@
 import csv from "csv-parser";
 import fs from "fs";
 
-type Platform = "NAVER" | "DAUM";
-
-export interface Genre {
-  name: string;
-  code: string;
-}
-
-export interface Author {
-  id: string;
-  name: string;
-}
-
-export interface Webtoon {
-  id: string;
-  title: string;
-  genre_codes: string;
-  isFinish: string;
-  isAdult: string;
-  isFree: string;
-  platform: Platform;
-  url: string;
-  thumbnail: string;
-  description: string;
-  authors_id: string;
-}
-
-export type CsvData = Webtoon[] | Author[] | Genre[];
+import { CsvData } from "./types";
 
 function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));

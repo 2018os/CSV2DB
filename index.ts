@@ -1,19 +1,12 @@
 import { PrismaClient } from "@prisma/client";
 
-import {
-  sleep,
-  stringToBoolean,
-  getData,
-  Genre,
-  Author,
-  Webtoon,
-  CsvData,
-} from "./tools";
+import { sleep, getData } from "./tools";
+
+import { Genre, Author, Webtoon, CsvData } from "./types";
 
 const prisma = new PrismaClient();
 
 const AUTHOR_ID_UNIT = 1000;
-const WEBTOON_ID_UNIT = 10000;
 
 async function insertGenres(value: Genre) {
   return prisma.genre.create({
@@ -36,47 +29,60 @@ async function insertAuthors(value: Author) {
 
 async function insertWebtoons(value: Webtoon) {
   const {
-    id, // base64 encoding
     title,
-    // genres,
-    genre_codes,
+    genres,
     isFinish,
     isAdult,
-    isFree,
-    // TODO: Enhance
+    isPay,
     platform,
     url,
     thumbnail,
     description,
-    authors_id,
+    author,
   } = value;
-  const genreArray = genre_codes.split("/");
-  const genreObj = genreArray.map((genre) => ({ code: genre }));
-  const authorArray = authors_id.split("/");
+  const genreArray = genres.split("/");
+  const genreObj = genreArray.map((genre) => ({ name: genre.trim() }));
+  const authorArray = author.split("/");
   const authorObj = authorArray.map((author) => {
-    const authorIdaddedUnit = Number(author) + AUTHOR_ID_UNIT;
-    return { id: Buffer.from(String(authorIdaddedUnit)).toString("base64") };
+    return {
+      id: Buffer.from(author.trim()).toString("base64"),
+      name: author.trim(),
+    };
   });
-  const webtoonIdaddedUnit = Number(id) + WEBTOON_ID_UNIT;
   const data = {
-    id: Buffer.from(String(webtoonIdaddedUnit)).toString("base64"),
+    id: Buffer.from(title + author).toString("base64"),
     title,
     description,
-    isAdult: stringToBoolean(isAdult),
-    isFinish: stringToBoolean(isFinish),
-    isPay: !stringToBoolean(isFree),
+    isAdult: !!isAdult,
+    isFinish: !!isFinish,
+    isPay: !!isPay,
     platform,
     thumbnail: thumbnail === "" ? "No thumbnail" : thumbnail,
     url: url === "" ? "No url" : url,
     authors: {
-      connect: authorObj,
+      connectOrCreate: authorObj.map((author) => {
+        return {
+          where: {
+            id: author.id,
+          },
+          create: {
+            id: author.id,
+            name: author.name,
+          },
+        };
+      }),
     },
     genres: {
       connect: genreObj,
     },
   };
-  return prisma.webtoon.create({
-    data,
+  console.log(data.title);
+  return prisma.webtoon.upsert({
+    where: {
+      id: Buffer.from(title + author).toString("base64"),
+    },
+    create: data,
+    update: data,
   });
 }
 
@@ -95,17 +101,12 @@ async function main() {
     case "author":
       return executeInsertData(insertAuthors, "csv/author.csv");
     case "webtoon":
-      return executeInsertData(insertWebtoons, "csv/webtoons.csv");
+      return executeInsertData(insertWebtoons, "csv/naver-wed.csv");
     default:
       return 0;
   }
 }
 
-main()
-  .catch((e) => {
-    throw e;
-  })
-  .finally(async () => {
-    await prisma.disconnect();
-    return 0;
-  });
+main().finally(() => {
+  prisma.$disconnect();
+});

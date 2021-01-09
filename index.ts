@@ -1,10 +1,18 @@
 import { PrismaClient } from "@prisma/client";
 
-import { sleep, getData } from "./tools";
+import { convertAuthor, convertGenre, sleep, getData } from "./tools";
 
 import { Genre, Webtoon, CsvData } from "./types";
 
 const prisma = new PrismaClient();
+
+async function executeInsertData(action: Function, path: string) {
+  const data: CsvData = await getData(path);
+  for (let i = 0; i < data.length; i++) {
+    sleep(2000);
+    await action(data[i]);
+  }
+}
 
 async function insertGenres(value: Genre) {
   return prisma.genre.create({
@@ -29,12 +37,17 @@ async function insertWebtoon(value: Webtoon) {
     author,
   } = value;
   const genreArray = genres.split("/");
-  const genreObj = genreArray.map((genre) => ({ name: genre.trim() }));
+  const genreObj = genreArray.map((genre) => {
+    return {
+      name: convertGenre(genre),
+    };
+  });
   const authorArray = author.split("/");
   const authorObj = authorArray.map((author) => {
+    const convertedAuthor = convertAuthor(author);
     return {
-      id: Buffer.from(author.trim()).toString("base64"),
-      name: author.trim(),
+      id: Buffer.from(convertedAuthor).toString("base64"),
+      name: convertedAuthor,
     };
   });
   const data = {
@@ -47,7 +60,7 @@ async function insertWebtoon(value: Webtoon) {
     platform,
     thumbnail: thumbnail === "" ? "No thumbnail" : thumbnail,
     url: {
-      NAVER: `https://comic.naver.com/${url}`,
+      NAVER: `https://comic.naver.com${url}`,
       DAUM: `http://webtoon.daum.net/webtoon/view/${url}`,
     }[platform],
     authors: {
@@ -75,14 +88,6 @@ async function insertWebtoon(value: Webtoon) {
     create: data,
     update: data,
   });
-}
-
-async function executeInsertData(action: Function, path: string) {
-  const data: CsvData = await getData(path);
-  for (let i = 0; i < data.length; i++) {
-    sleep(2000);
-    await action(data[i]);
-  }
 }
 
 async function main() {

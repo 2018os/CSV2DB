@@ -5,9 +5,6 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "insert_genre": "ts-node index.ts genre",
-    "insert_author": "ts-node index.ts author",
-    "insert_webtoon": "ts-node index.ts webtoon",
     "migrate": "npx prisma migrate save --create-db --experimental",
     "db": "npx prisma migrate up --create-db --experimental",
     "generate": "npx prisma generate",
